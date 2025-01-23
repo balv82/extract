@@ -42,7 +42,7 @@ public class SetupRedirectFilter extends OncePerRequestFilter {
         }
     
         boolean configured = appInitializationService.isConfigured();
-        boolean whitelisted = isWhitelistedResource(getRelativeStatusPath);
+        boolean whitelisted = isWhitelistedResource(requestURI);
         boolean starts = requestURI.startsWith(getRelativeSetupPath(request));
         boolean decision = configured || whitelisted || starts;
         logger.debug("Request to [" + request.getRequestURI() + "] decision: " + (decision ? "FORWARD":"REDIRECT") + " [C:" + configured + ",W:" + whitelisted + ",S:" + starts + "]");
