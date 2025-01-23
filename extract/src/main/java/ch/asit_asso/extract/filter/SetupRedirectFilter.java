@@ -37,8 +37,12 @@ public class SetupRedirectFilter extends OncePerRequestFilter {
 
     private boolean requestCanBeForwarded(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
+        if (requestURI.startsWith(getRelativeStatusPath(request))) {
+            return true;
+        }
+    
         boolean configured = appInitializationService.isConfigured();
-        boolean whitelisted = isWhitelistedResource(requestURI.toLowerCase());
+        boolean whitelisted = isWhitelistedResource(getRelativeStatusPath);
         boolean starts = requestURI.startsWith(getRelativeSetupPath(request));
         boolean decision = configured || whitelisted || starts;
         logger.debug("Request to [" + request.getRequestURI() + "] decision: " + (decision ? "FORWARD":"REDIRECT") + " [C:" + configured + ",W:" + whitelisted + ",S:" + starts + "]");
@@ -50,8 +54,13 @@ public class SetupRedirectFilter extends OncePerRequestFilter {
         return request.getContextPath() + "/setup";
     }
 
+    private String getRelativeStatusPath(HttpServletRequest request)
+    {
+        return request.getContextPath() + "/status";
+    }
+    
     private boolean isWhitelistedResource(String uri) {
-        return uri.equals("/extract/status") ||isWhitelistedJavacriptFile(uri) || WHITELISTED_EXTENSIONS.stream().anyMatch(uri::endsWith);
+        return isWhitelistedJavacriptFile(uri) || WHITELISTED_EXTENSIONS.stream().anyMatch(uri::endsWith);
     }
 
     private boolean isWhitelistedJavacriptFile(String uri) {
