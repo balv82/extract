@@ -116,6 +116,7 @@ jobs:
                    interval: 5000
                    timeout: 150000
                    verbose: true
+                   log: true
                    
              - name: Execute functional tests
                run: mvn -q verify -Pfunctional-tests --batch-mode
