@@ -51,7 +51,7 @@ public class SetupRedirectFilter extends OncePerRequestFilter {
     }
 
     private boolean isWhitelistedResource(String uri) {
-        return uri.equals("/status") ||isWhitelistedJavacriptFile(uri) || WHITELISTED_EXTENSIONS.stream().anyMatch(uri::endsWith);
+        return uri.equals("/extract/status") ||isWhitelistedJavacriptFile(uri) || WHITELISTED_EXTENSIONS.stream().anyMatch(uri::endsWith);
     }
 
     private boolean isWhitelistedJavacriptFile(String uri) {
