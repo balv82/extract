@@ -84,8 +84,8 @@ public class SecurityConfiguration {
         httpSecurity.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
                     new AntPathRequestMatcher("/setup", "GET"),
-                    new AntPathRequestMatcher("/status", "GET"),
-                    new AntPathRequestMatcher("/extract/status", "GET"),
+                    new AntPathRequestMatcher("/status", "HEAD"),
+                    new AntPathRequestMatcher("/extract/status", "HEAD"),
                     new AntPathRequestMatcher("/setup", "POST"),
                     new AntPathRequestMatcher("/css/**", "GET"),
                     new AntPathRequestMatcher("/assets/**", "GET"),
