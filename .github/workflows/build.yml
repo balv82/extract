@@ -108,15 +108,24 @@ jobs:
                
              - name: Execute integration tests
                run: mvn -q verify -Pintegration-tests --batch-mode
-               
+
+            
              - name: Wait on Extract application deployment
-               uses: iFaxity/wait-on-action@v1.1.0
+               uses: nick-invision/wait-for-url@v1
                with:
-                   resource: http://localhost:8080/extract/status
-                   interval: 5000
-                   timeout: 150000
-                   verbose: true
-                   log: true
+                   url: "http://localhost:8080/extract/status"
+                   expected-statuses: "200,401,403" # Autoriser 401/403 si Spring Security bloque
+                   timeout: 150
+                   interval: 5
+                   
+             #- name: Wait on Extract application deployment
+            #  uses: iFaxity/wait-on-action@v1.1.0
+            #   with:
+             #      resource: http://localhost:8080/extract/status
+              #     interval: 5000
+               #    timeout: 150000
+                #   verbose: true
+                 #  log: true
                    
              - name: Execute functional tests
                run: mvn -q verify -Pfunctional-tests --batch-mode
