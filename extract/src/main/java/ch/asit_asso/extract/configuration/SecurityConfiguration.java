@@ -85,6 +85,7 @@ public class SecurityConfiguration {
                 .requestMatchers(
                     new AntPathRequestMatcher("/setup", "GET"),
                     new AntPathRequestMatcher("/status", "GET"),
+                    new AntPathRequestMatcher("/extract/status", "GET"),
                     new AntPathRequestMatcher("/setup", "POST"),
                     new AntPathRequestMatcher("/css/**", "GET"),
                     new AntPathRequestMatcher("/assets/**", "GET"),
