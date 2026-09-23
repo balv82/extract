@@ -95,6 +95,51 @@ public interface ITaskProcessorRequest {
 
 
     /**
+     * Obtains the postal address of the order recipient.
+     * <p>
+     * The address is a multiline string whose first line holds the street name and number, and whose last
+     * line holds the ZIP code followed by the locality.
+     * <p>
+     * This method is a default one so that task processor plugins written before this information was
+     * available keep working. Such plugins will report that the address is unknown.
+     *
+     * @return the client postal address, or <code>null</code> if it is not available
+     */
+    default String getClientAddress() {
+        return null;
+    }
+
+
+
+    /**
+     * Obtains the electronic address of the order recipient.
+     * <p>
+     * This method is a default one so that task processor plugins written before this information was
+     * available keep working. Such plugins will report that the e-mail address is unknown.
+     *
+     * @return the client e-mail address, or <code>null</code> if it is not available
+     */
+    default String getClientEmail() {
+        return null;
+    }
+
+
+
+    /**
+     * Obtains the telephone number of the order recipient.
+     * <p>
+     * This method is a default one so that task processor plugins written before this information was
+     * available keep working. Such plugins will report that the telephone number is unknown.
+     *
+     * @return the client telephone number, or <code>null</code> if it is not available
+     */
+    default String getClientPhone() {
+        return null;
+    }
+
+
+
+    /**
      * Obtains when the request processing completed.
      *
      * @return the end date

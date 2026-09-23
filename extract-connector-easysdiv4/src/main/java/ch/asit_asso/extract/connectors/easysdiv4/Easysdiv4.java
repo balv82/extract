@@ -378,6 +378,102 @@ public class Easysdiv4 implements IConnector {
 
 
     /**
+     * The contact information carried by an easySDI address element.
+     * <p>
+     * It keeps the address lines apart from the telephone number and the e-mail address, so that they can
+     * either be exposed as distinct values or be collapsed into the legacy single-blob representation.
+     */
+    static final class ContactDetails {
+
+        /**
+         * The separator between two lines of the legacy single-blob representation.
+         */
+        private static final String LEGACY_LINE_SEPARATOR = "\r\n";
+
+        /**
+         * The separator between two lines of the postal address.
+         */
+        private static final String ADDRESS_LINE_SEPARATOR = "\n";
+
+        /**
+         * The lines of the postal address, without any empty one.
+         */
+        private final List<String> addressLines = new ArrayList<>();
+
+        /**
+         * The telephone number, if any.
+         */
+        private String phone;
+
+        /**
+         * The electronic address, if any.
+         */
+        private String email;
+
+
+
+        /**
+         * Obtains the postal address as a multiline string.
+         *
+         * @return the postal address, or <code>null</code> if there is not any
+         */
+        String getAddress() {
+
+            if (this.addressLines.isEmpty()) {
+                return null;
+            }
+
+            return StringUtils.join(this.addressLines, ContactDetails.ADDRESS_LINE_SEPARATOR);
+        }
+
+
+
+        /**
+         * Obtains the telephone number.
+         *
+         * @return the telephone number, or <code>null</code> if there is not any
+         */
+        String getPhone() {
+            return this.phone;
+        }
+
+
+
+        /**
+         * Obtains the electronic address.
+         *
+         * @return the e-mail address, or <code>null</code> if there is not any
+         */
+        String getEmail() {
+            return this.email;
+        }
+
+
+
+        /**
+         * Obtains every piece of contact information as one single string.
+         *
+         * @return the address lines followed by the telephone number and the e-mail address
+         */
+        String toDetailsString() {
+            final List<String> details = new ArrayList<>(this.addressLines);
+
+            if (StringUtils.isNotEmpty(this.phone)) {
+                details.add(this.phone);
+            }
+
+            if (StringUtils.isNotEmpty(this.email)) {
+                details.add(this.email);
+            }
+
+            return StringUtils.join(details, ContactDetails.LEGACY_LINE_SEPARATOR);
+        }
+
+    }
+
+
+
+    /**
      * Creates an address string from the content of an XML element.
      *
      * @param document    the XML document to parse
@@ -386,7 +482,21 @@ public class Easysdiv4 implements IConnector {
      */
     private String buildAddressDetailsFromXpath(final Document document, final String xpathString) {
 
-        List<String> details = new ArrayList<>();
+        return this.buildContactDetailsFromXpath(document, xpathString).toDetailsString();
+    }
+
+
+
+    /**
+     * Extracts the contact information from the content of an XML element.
+     *
+     * @param document    the XML document to parse
+     * @param xpathString the XPath expression that locates the element containing the address information
+     * @return the contact information, never <code>null</code>
+     */
+    ContactDetails buildContactDetailsFromXpath(final Document document, final String xpathString) {
+
+        final ContactDetails contactDetails = new ContactDetails();
 
         try {
             final XPathFactory xPathfactory = XPathFactory.newInstance();
@@ -407,7 +517,7 @@ public class Easysdiv4 implements IConnector {
                     final String address1Text = address1Node.item(0).getTextContent();
 
                     if (StringUtils.isNotEmpty(address1Text)) {
-                        details.add(address1Text);
+                        contactDetails.addressLines.add(address1Text);
                     }
                 }
 
@@ -415,7 +525,7 @@ public class Easysdiv4 implements IConnector {
                     final String address2Text = address2Node.item(0).getTextContent();
 
                     if (StringUtils.isNotEmpty(address2Text)) {
-                        details.add(address2Text);
+                        contactDetails.addressLines.add(address2Text);
                     }
                 }
 
@@ -433,14 +543,14 @@ public class Easysdiv4 implements IConnector {
                 if (StringUtils.isEmpty(zipCodeText)) {
 
                     if (StringUtils.isNotEmpty(localityText)) {
-                        details.add(localityText);
+                        contactDetails.addressLines.add(localityText);
                     }
 
                 } else if (StringUtils.isEmpty(localityText)) {
-                    details.add(zipCodeText);
+                    contactDetails.addressLines.add(zipCodeText);
 
                 } else {
-                    details.add(String.format("%s %s", zipCodeText, localityText));
+                    contactDetails.addressLines.add(String.format("%s %s", zipCodeText, localityText));
                 }
 
                 if (phoneNode != null && phoneNode.getLength() > 0) {
@@ -448,7 +558,7 @@ public class Easysdiv4 implements IConnector {
                     this.logger.debug("Phone node content is {}", phoneText);
 
                     if (StringUtils.isNotEmpty(phoneText)) {
-                        details.add(phoneText);
+                        contactDetails.phone = phoneText;
                     }
                 }
 
@@ -457,7 +567,7 @@ public class Easysdiv4 implements IConnector {
                     this.logger.debug("E-mail node content is {}", emailText);
 
                     if (StringUtils.isNotEmpty(emailText)) {
-                        details.add(emailText);
+                        contactDetails.email = emailText;
                     }
                 }
             }
@@ -466,8 +576,8 @@ public class Easysdiv4 implements IConnector {
             this.logger.error("The address details could not be retrieved", exc);
         }
 
-        this.logger.debug("Address details are:\n{}", StringUtils.join(details, "\r\n"));
-        return StringUtils.join(details, "\r\n");
+        this.logger.debug("Address details are:\n{}", contactDetails.toDetailsString());
+        return contactDetails;
     }
 
 
@@ -1196,8 +1306,9 @@ public class Easysdiv4 implements IConnector {
                     config.getProperty("getOrders.xpath.client").replace("<guid>", guid));
             final String clientGuid = this.getXMLNodeLabelFromXpath(document,
                     config.getProperty("getOrders.xpath.clientGuid").replace("<guid>", guid));
-            final String clientDetails = this.buildAddressDetailsFromXpath(document,
+            final ContactDetails clientContact = this.buildContactDetailsFromXpath(document,
                     config.getProperty("getOrders.xpath.clientDetails").replace("<guid>", guid));
+            final String clientDetails = clientContact.toDetailsString();
             this.logger.debug("Client details are : {}", clientDetails);
             final String tiers = this.getXMLNodeLabelFromXpath(document,
                     config.getProperty("getOrders.xpath.tiers").replace("<guid>", guid));
@@ -1237,6 +1348,9 @@ public class Easysdiv4 implements IConnector {
                 product.setClient(client);
                 product.setClientGuid(clientGuid);
                 product.setClientDetails(clientDetails);
+                product.setClientAddress(clientContact.getAddress());
+                product.setClientEmail(clientContact.getEmail());
+                product.setClientPhone(clientContact.getPhone());
                 product.setTiers(tiers);
                 product.setTiersGuid(tiersGuid);
                 product.setTiersDetails(tiersDetails);
